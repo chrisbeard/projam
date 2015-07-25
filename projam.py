@@ -9,6 +9,11 @@ import time
 import operator
 import os
 import wave
+import pitches
+
+### Constants
+num_pitches = len(pitches.pitches)
+use_pitch = False
 
 ### Classes
 class metadata:
@@ -16,8 +21,7 @@ class metadata:
     freq = 0
     def __init__(self, _tok, _hits=1):
         self.hits = _hits
-        h = hash_tok(_tok)
-        self.freq = get_freq(h, h/10)
+        self.freq = hash_tok(_tok)
 
     def __repr__(self):
         return "{}".format(self.freq)
@@ -52,16 +56,19 @@ def get_signal_data(frequency=440, duration=1, volume=32768, samplerate=44100):
     return y
 
 def numpy_to_string(y):
-    signal = "".join((wave.struct.pack('h', item) for item in y))
+    signal = "".join((wave.struct.pack('i', item) for item in y))
     return signal
 
 def get_freq(freq, base=10):
-    return int(base * round(float(freq) / base))
+    return int(base * round(float(freq + base) / base))
 
 def hash_tok(tok):
     h = hashlib.sha1()
     h.update(tok)
-    return int(h.hexdigest()[:4], 16) % 10000
+    if use_pitch:
+        return pitches.pitches[int(h.hexdigest()[:4], 16) % num_pitches]
+    else:
+        return get_freq(int(h.hexdigest()[:4], 16) % 10000)
 
 def add_toks(tok_dict, wav_set, toks):
     for tok in toks:
@@ -110,12 +117,20 @@ def play_data(f_in, tok_dict, wav_set):
             sys.stderr.write('\n')
 
 def main():
-    if len(sys.argv) == 2:
+    global use_pitch
+    if len(sys.argv) >= 2:
+        if "--pitched" in sys.argv:
+            use_pitch = True
+            sys.argv.pop(sys.argv.index("--pitched"))
         f = sys.argv[1]
         tok_dict, wav_set = read_file(f)
         build_wavs(wav_set)
         play_data(f, tok_dict, wav_set)
+    else:
+        usage()
+        sys.exit(1)
 
 ### Main
 if __name__ == '__main__':
+    # print len(pitches.pitches)
     main()
