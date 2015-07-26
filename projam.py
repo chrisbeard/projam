@@ -3,13 +3,13 @@
 import hashlib
 import math
 import numpy
+import pitches
 import subprocess
 import sys
 import time
 import operator
 import os
 import wave
-import pitches
 
 ### Constants
 num_pitches = len(pitches.pitches)
@@ -132,5 +132,4 @@ def main():
 
 ### Main
 if __name__ == '__main__':
-    # print len(pitches.pitches)
     main()
